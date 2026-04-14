@@ -10,6 +10,7 @@ from folium.plugins import HeatMap
 from streamlit_folium import st_folium
 from datetime import datetime, timedelta
 import time
+import os
 
 # ─────────────────────────────────────────
 # PAGE CONFIG
@@ -145,8 +146,14 @@ PLOTLY_LAYOUT = dict(
 # ─────────────────────────────────────────
 # DATA LOADING & CACHING
 # ─────────────────────────────────────────
+def get_file_modification_time(path="data.xlsx"):
+    """Get file modification time to invalidate cache when file changes."""
+    if os.path.exists(path):
+        return os.path.getmtime(path)
+    return None
+
 @st.cache_data(ttl=30)
-def load_data(path="data.xlsx"):
+def load_data(path="data.xlsx", file_mtime=None):
     df = pd.read_excel(path)
     df.columns = [c.strip() for c in df.columns]
 
@@ -253,7 +260,7 @@ def trend_fig(df, col, name, color, limit=None, limit_name=None, y_title=""):
 # ─────────────────────────────────────────
 # LOAD DATA
 # ─────────────────────────────────────────
-data = load_data("data.xlsx")
+data = load_data("data.xlsx", file_mtime=get_file_modification_time("data.xlsx"))
 
 # ─────────────────────────────────────────
 # AUTO-REFRESH
